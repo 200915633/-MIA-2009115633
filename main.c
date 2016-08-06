@@ -12,12 +12,14 @@ void comandomkdisk(char comando[300]){
     char *nombre;
 //valor por default
 unidad='m';
+size=-1;
 path=NULL;
-token=strtok(comando," \n");
-	 token=strtok(NULL, " \n");
+nombre=NULL;
+token=strtok(comando," \n\\");
+	 token=strtok(NULL, " \n\\");
 	 int bandera=0;//la bandera nos ayuda con el path con comillas
 	 while(token!=NULL){
-	 printf("%s\n",token);
+
 		 ///**************bandera
  	 if(bandera==1){
 	  strcat(path," ");//agrega espacio en blanco al path
@@ -30,7 +32,8 @@ token=strtok(comando," \n");
 				 strncat(path,token,strlen(token)-1);//concatena el ultimo token del path sin comillas
 				 }}
 		//************siz
-	else if(strstr(token,"-size::")!=NULL){
+	else if(strstr(token,"-size")!=NULL){
+
 		 int len=strlen(token);
 		 int i=7;//tamaño del token -size::
 		 char* temp;//captura el valor de size
@@ -47,8 +50,19 @@ token=strtok(comando," \n");
 	else if(strstr(token,"+unit::")!=NULL){
 			 int le=strlen(token);//tamaño total del token +unit:NUMERO
 			 unidad=token[le-1];
+        if((unidad!='k')&&(unidad!='m'))
+        printf("error :el valor de la unidad no es valida\n");
 
-
+		 }
+		 else if(strstr(token,"-name::")!=NULL){
+			int le=strlen(token);
+			  nombre=(char*) malloc (1000);
+			 int i=7;
+			 int j=0;
+			 for(; i<le;i++){
+				 nombre[j]=token[i];
+				 j++;
+                }
 		 }
 		 ///****************************
 		 else if(strstr(token,"-path::")!=NULL){
@@ -80,12 +94,46 @@ token=strtok(comando," \n");
 
 		 }
 		 else{
-			 printf("error: instruccion no reconocido\n");
+			 printf(" %s error: instruccion no reconocido\n",token);
 			 }
 
-		  token=strtok(NULL, " \n");
+		  token=strtok(NULL, " \n\\");
 
 		}
+		if(size!=-1 && path!=NULL && nombre!=NULL){
+printf("%c\n",unidad);  printf("%d\n",size);  printf("%s\n",path);printf("%s\n",nombre);
+//crear el tamaño de archivo que se indico
+int sizetotal;
+       int s=250;
+		sizetotal=1;
+		if(unidad=='k')
+			{sizetotal=size*1024; s*=size;}
+		  else {sizetotal=size*1024*1024;
+			  s*=1000*size;}
+//creamos el archivo
+FILE *fichero;
+strcat(path,nombre);
+
+ fichero=fopen(path, "w+b"); //binario read write
+      if(fichero==NULL){
+        printf("%s",path);
+      return ;
+  }else{
+
+  int tipo[s];
+  int i=0;
+  int j=0;
+
+        for (;j<sizetotal;j++){
+        for (;i<s;i++){
+         fwrite(&tipo, sizeof(tipo[i]),1,fichero);
+        }
+        fclose(fichero);
+
+  }
+
+}}
+printf("finalizo");
 }
 void comandos(){
    char comando[300];
@@ -99,7 +147,8 @@ comando[0]='\0';
        while(strstr(temporal,"\\")!=NULL)
     {
 		int largo=strlen(temporal);
-		strncat(comando,temporal,(largo-2));
+
+		strcat(comando,temporal);
 		fgets(temporal, 200, stdin);
 		}
 		strcat(comando,temporal);
@@ -111,7 +160,7 @@ comando[0]='\0';
        comando[i]=tolower(comando[i]);
    }
    ///identificar el comando
-printf("%s", comando);
+
    if(strstr(comando,"mkdisk")!=NULL){
         comandomkdisk(comando);
    }
