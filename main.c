@@ -27,7 +27,153 @@ typedef struct{
 	TParticion part_primaria[4];//struct con infornacion de particiones primarias
 	TParticionEBR part_ext;//struct con informcion de particion extendida
 	}MBR;
+void comandofdisk(char comando[300]){
+char *token;
+	int size;
+	char unit;
+	char* path;
+	char type;
+	char *fit;
+	char *ddelete;
+	char *nombre;
+	int add;
+	int tipoaccion=0;//0 crear particion, 1.add ,2.delete
+	unit='k';
+	type='p';
+    fit="wf\0";
+	ddelete="fast\0";
+	add=0;
+	int bandera;
+	bandera=0;
+	 token=strtok(comando," \n\\");
+	 token=strtok(NULL, " \n\\");
 
+	 while(token!=NULL){
+		 ///**************bandera
+ 	 if(bandera==1){
+	  strcat(path," ");
+		 if(strstr(token,"\"")==NULL){
+			 bandera=1;
+			 strcat(path,token);
+			 }else{
+				 bandera=0;
+				 strncat(path,token,strlen(token)-1);
+				 }}
+		//************siz
+	else if(strstr(token,"-size::")!=NULL){
+		 int len=strlen(token);
+		 int i=7;
+		 char* temp;
+		  int j=0;
+		   temp=(char*) malloc (6);
+		  for(;i<len;i++)
+		   {temp[j]=token[i];
+		   j++;
+		   }temp[j]='\0';
+		   size=atoi(temp);
+
+		 }
+		 ///********************unit
+	else if(strstr(token,"+unit::")!=NULL){
+			 int le=strlen(token);
+			 unit=token[le-1];
+
+
+		 }
+		 else if(strstr(token,"+type::")!=NULL){
+			 int le=strlen(token);
+			 type=token[le-1];
+
+
+		 }
+		 else if(strstr(token,"+fit::")!=NULL){
+			 int le=strlen(token);
+			 fit[0]=token[le-2];
+            fit[1]=token[le-1];
+		 }
+		 else if(strstr(token,"+delete::")!=NULL){
+			 int le=strlen(token);
+			 ddelete=(char*) malloc (1000);
+			 int i=10;
+			 int j=0;
+			 for(; i<le;i++){
+				 ddelete[j]=token[i];
+				 j++;
+				 }
+
+            tipoaccion=2;
+		 }
+		 else if(strstr(token,"-name::")!=NULL){
+			 int le=strlen(token);
+			  nombre=(char*) malloc (1000);
+			 int i=8;
+			 int j=0;
+			 for(; i<le-1;i++){
+				 nombre[j]=token[i];
+				 j++;
+				 }
+
+
+		 }
+		 else if(strstr(token,"+add::")!=NULL){
+		 int len=strlen(token);
+		 int i=7;
+		 char* temp;
+		  int j=0;
+		   temp=(char*) malloc (6);
+		  for(;i<len;i++)
+		   {temp[j]=token[i];
+		   j++;
+		   }temp[j]='\0';
+		   add=atoi(temp);
+        tipoaccion=1;
+
+		 }
+		 ///****************************
+		 else if(strstr(token,"-path::")!=NULL){
+			 int len=strlen(token);
+
+			   path=(char*) malloc (1000);
+			  if(strstr(token,"\"")==NULL)
+			 {  bandera=0;
+
+				 int i=7;
+			 int j=0;
+			 for(;i<len;i++){
+				 path[j]=token[i];
+				 j++;
+				 }
+				 }
+			 else{
+			 bandera=1;
+			 int i=8;
+			 int j=0;
+			 for(;i<len;i++){
+				 path[j]=token[i];
+				 j++;
+				 }
+
+
+			 }
+
+
+		 }
+		 else{
+			 printf("error: instruccion no reconocido\n");
+			 }
+
+		  token=strtok(NULL, " \n\\");
+
+		}
+		printf("%s\n",path);
+		printf("%s\n",nombre);
+		printf("%s\n",ddelete);
+		printf("%d\n",size);
+		printf("%d\n",add);
+		printf("%c\n",unit);
+		printf("%c\n",type);
+		printf("%s\n",fit);
+}
 void comandomkdisk(char comando[300]){
 //identificando valores
 
@@ -220,12 +366,20 @@ comando[0]='\0';
 
    if(strstr(comando,"mkdisk")!=NULL){
         comandomkdisk(comando);
+   }else if(strstr(comando,"fdisk")!=NULL){
+        comandofdisk(comando);
    }
 
 }
 
 int main()
 {
+int seguir;
+printf("¿Desea ingresar comandos? 1)si 2)no\n");
+scanf("%d",&seguir);
+getchar();
+if(seguir==1){
      comandos();
+     }
     return 0;
 }
