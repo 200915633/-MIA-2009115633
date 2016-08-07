@@ -2,6 +2,32 @@
 #include <stdlib.h>
 #include <string.h>
 
+//struct para la creacion de muestro bloque
+typedef struct{
+	char part_status;
+	char part_type;
+	char part_fit;
+	int part_start;
+	int part_size;
+	char part_name[16];
+	}TParticion;
+	typedef struct{
+	char part_status;
+	char part_fit;
+	int part_start;
+	int part_size;
+	int part_next;
+	char part_name[16];
+	}TParticionEBR;
+///MBR****************************+
+typedef struct{
+	int mbr_tamao;
+	char* mbr_fecha_creacion;
+	int  mbr_disk_signature;
+	TParticion part_primaria[4];//struct con infornacion de particiones primarias
+	TParticionEBR part_ext;//struct con informcion de particion extendida
+	}MBR;
+
 void comandomkdisk(char comando[300]){
 //identificando valores
 
@@ -101,39 +127,70 @@ token=strtok(comando," \n\\");
 
 		}
 		if(size!=-1 && path!=NULL && nombre!=NULL){
-printf("%c\n",unidad);  printf("%d\n",size);  printf("%s\n",path);printf("%s\n",nombre);
+//printf("%c\n",unidad);  printf("%d\n",size);  printf("%s\n",path);printf("%s\n",nombre);
 //crear el tamaño de archivo que se indico
 int sizetotal;
-       int s=250;
+int numerobyt;
+       int s=250;//un byte
 		sizetotal=1;
+        s*=size;
 		if(unidad=='k')
-			{sizetotal=size*1024; s*=size;}
+			{sizetotal=size*1024; numerobyt=1;
+			}
 		  else {sizetotal=size*1024*1024;
-			  s*=1000*size;}
+		  s*=100;
+		  numerobyt=10;
+			  }
+
 //creamos el archivo
 FILE *fichero;
 strcat(path,nombre);
+//debemos verificaar si el disco ya existe
+fichero = fopen(path, "r" );
 
+   if( fichero )
+     { printf( " EL DISCO YA EXISTE\n" );
+      fclose(fichero);}
+   else
+   {//no existe entonces procedemos a crearlo
  fichero=fopen(path, "w+b"); //binario read write
       if(fichero==NULL){
         printf("%s",path);
       return ;
   }else{
 
-  int tipo[s];
+int mibyte[s];
   int i=0;
   int j=0;
-
+char nulo='\0';
         for (;j<sizetotal;j++){
         for (;i<s;i++){
-         fwrite(&tipo, sizeof(tipo[i]),1,fichero);
+         fwrite(&nulo, sizeof(mibyte[i]),numerobyt,fichero);
         }
-        fclose(fichero);
 
-  }
+}
+//ya creado el archivo creamos el master record
+time_t tt;
+tt=time(NULL);
+
+			  MBR master;
+			  master.mbr_tamao=sizetotal;
+			  master.mbr_fecha_creacion=asctime(localtime(&tt));
+			  master.mbr_disk_signature=rand();
+              master.part_primaria[0].part_status=0;
+              master.part_primaria[1].part_status=0;
+              master.part_primaria[2].part_status=0;
+              master.part_primaria[3].part_status=0;
+              master.part_ext.part_status=0;
+              fseek(fichero,0,SEEK_SET);
+      fwrite(&master, sizeof(master),1,fichero);
+      printf("disco creado con exito\n");
+ fclose(fichero);
 
 }}
-printf("finalizo");
+}else{
+printf("VALORES SIN DEFINIR\n");
+}
 }
 void comandos(){
    char comando[300];
