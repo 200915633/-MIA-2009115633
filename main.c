@@ -40,6 +40,9 @@ char *token;
 	int tipoaccion=0;//0 crear particion, 1.add ,2.delete
 	unit='k';
 	type='p';
+	path=NULL;
+	size=0;
+	nombre=NULL;
     fit="wf\0";
 	ddelete="fast\0";
 	add=0;
@@ -165,6 +168,7 @@ char *token;
 		  token=strtok(NULL, " \n\\");
 
 		}
+
 		printf("%s\n",path);
 		printf("%s\n",nombre);
 		printf("%s\n",ddelete);
@@ -173,6 +177,41 @@ char *token;
 		printf("%c\n",unit);
 		printf("%c\n",type);
 		printf("%s\n",fit);
+		if(tipoaccion==0){
+		if(path!=NULL && size!=0 && nombre!=NULL){
+		FILE *fichero;
+
+		fichero=fopen(path,"rb+");
+		if(fichero){
+		MBR temporal;
+		  fread (&temporal, sizeof(temporal), 1, fichero);
+
+
+        fseek (fichero, 0, SEEK_SET);
+        int i=0;
+        int nlibres=0;
+        for(;i<4;i++){
+        if(temporal.part_primaria[i].part_status==0)
+        { nlibres++;
+
+        }
+        }
+        if(type=='p'){
+        if(nlibres==0)
+        printf("No se puede crear particion\n particones primarias=4\n");
+        else if(nlibres=1 && temporal.part_ext.part_status!=0)
+        printf("YA existen 3 primarias y una extendida\n");
+        else if(nlibres>2){
+            //crear el primer ajuste
+        }
+        }
+        printf("libres %d\n",nlibres);
+		fclose(fichero);
+		}
+
+		}
+
+		}
 }
 void comandomkdisk(char comando[300]){
 //identificando valores
