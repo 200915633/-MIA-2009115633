@@ -137,13 +137,13 @@ char *token;
 			 int len=strlen(token);
 
 			   path=(char*) malloc (1000);
-			  if(strstr(token,"\"")==NULL)
+			   if(token[len-1]=='\"')//no es path con comillas
 			 {  bandera=0;
 
-				 int i=7;
+				 int i=8;
 			 int j=0;
-			 for(;i<len;i++){
-				 path[j]=token[i];
+			 for(;i<len-1;i++){
+				 path[j]=token[i];//guarda el valor del path
 				 j++;
 				 }
 				 }
@@ -169,27 +169,61 @@ char *token;
 
 		}
 
-		printf("%s\n",path);
+	/*	printf("%s\n",path);
 		printf("%s\n",nombre);
 		printf("%s\n",ddelete);
 		printf("%d\n",size);
 		printf("%d\n",add);
 		printf("%c\n",unit);
 		printf("%c\n",type);
-		printf("%s\n",fit);
+		printf("%s\n",fit);*/
+
+	int sizetotal;
+int numerobyt=1;
+       int s=250;//un byte
+		sizetotal=1;
+        s*=size;
+		if(unit=='k')
+			{sizetotal=size*1024; numerobyt=1;
+			}
+		  else if(unit=='m'){sizetotal=size*1024*1024;
+		  s*=100;
+		  numerobyt=10;
+			  }
+
 		if(tipoaccion==0){
 		if(path!=NULL && size!=0 && nombre!=NULL){
 		FILE *fichero;
 
+ int nlibres=0;
 		fichero=fopen(path,"rb+");
 		if(fichero){
 		MBR temporal;
+		fseek (fichero, 0, SEEK_SET);
+		long int posicion;
 		  fread (&temporal, sizeof(temporal), 1, fichero);
+		  int posmbrf=ftell(fichero)+sizeof(int);
+          fseek (fichero, 0, SEEK_SET);
+
+int mibyte[s];
+  int i=0;
+  int j=0;
+  int fin;
+char nulo='\0';
+        for (;j<sizetotal;j++){
+        for (;i<s;i++){
+
+          fseek(fichero,numerobyt*sizeof(mibyte[i]),SEEK_CUR);
+        }
+
+}
+fin=ftell(fichero);
 
 
-        fseek (fichero, 0, SEEK_SET);
-        int i=0;
-        int nlibres=0;
+
+
+        i=0;
+
         for(;i<4;i++){
         if(temporal.part_primaria[i].part_status==0)
         { nlibres++;
@@ -197,15 +231,81 @@ char *token;
         }
         }
         if(type=='p'){
+
         if(nlibres==0)
         printf("No se puede crear particion\n particones primarias=4\n");
-        else if(nlibres=1 && temporal.part_ext.part_status!=0)
+        else if(nlibres==1 && temporal.part_ext.part_status==1)
         printf("YA existen 3 primarias y una extendida\n");
-        else if(nlibres>2){
-            //crear el primer ajuste
+        else //buscar posicon
+        {
+
+
+            if(nlibres==4 && temporal.part_ext.part_status!=1){
+
+
+                temporal.part_primaria[0].part_status=1;
+                temporal.part_primaria[0].part_start=posmbrf;
+                temporal.part_primaria[0].part_fit=fit;
+                strcmp(temporal.part_primaria[0].part_name,nombre);
+                temporal.part_primaria[0].part_size=fin;
+                temporal.part_primaria[0].part_type=type;
+                 fseek(fichero,0,SEEK_SET);//actualizo mbr
+                 fwrite(&temporal, sizeof(temporal),1,fichero);
+
+                 printf("se creo particion 1 con Exito\n");
+            }
+            else {
+
+             //recorrer todo
+             if(temporal.part_primaria[0].part_status!=1){//se puede colocar en la primera posicion
+             //buscar limite final
+                int posf=0;
+                int posi=posmbrf;
+
+
+             if(temporal.part_primaria[1].part_status==1)
+             posf=temporal.part_primaria[1].part_start;
+             else if(temporal.part_primaria[2].part_status==1)
+             posf=temporal.part_primaria[2].part_start;
+                 else if(temporal.part_primaria[3].part_status==1)
+             posf=temporal.part_primaria[3].part_start;
+             else
+              {fseek(fichero,0,SEEK_END);
+              posf=ftell(fichero);
+              }
+
+             if(temporal.part_ext.part_status==1)
+                if(temporal.part_ext.part_start<posf)
+                posf=temporal.part_ext.part_size-sizeof(int);
+
+                //calcular si el espacio es suficiente
+                if(posi+fin<posf){
+
+                temporal.part_primaria[0].part_status=1;
+                temporal.part_primaria[0].part_start=posmbrf;
+                temporal.part_primaria[0].part_fit=fit;
+                strcmp(temporal.part_primaria[0].part_name,nombre);
+                temporal.part_primaria[0].part_size=fin;
+                temporal.part_primaria[0].part_type=type;
+                 fseek(fichero,0,SEEK_SET);//actualizo mbr
+                 fwrite(&temporal, sizeof(temporal),1,fichero);
+
+                 printf("se creo particion 1 con Exito\n");
+
+
+                }
+
+             }
+
+
+            }
+
         }
+
+
+
         }
-        printf("libres %d\n",nlibres);
+
 		fclose(fichero);
 		}
 
@@ -280,12 +380,12 @@ token=strtok(comando," \n\\");
 			 int len=strlen(token);
 
 			   path=(char*) malloc (1000);//inicializamor el char para path
-			  if(strstr(token,"\"")==NULL)//no es path con comillas
+			  if(token[len-1]=='\"')//no es path con comillas
 			 {  bandera=0;
 
-				 int i=7;
+				 int i=8;
 			 int j=0;
-			 for(;i<len;i++){
+			 for(;i<len-1;i++){
 				 path[j]=token[i];//guarda el valor del path
 				 j++;
 				 }
@@ -312,7 +412,7 @@ token=strtok(comando," \n\\");
 
 		}
 		if(size!=-1 && path!=NULL && nombre!=NULL){
-//printf("%c\n",unidad);  printf("%d\n",size);  printf("%s\n",path);printf("%s\n",nombre);
+printf("%c\n",unidad);  printf("%d\n",size);  printf("%s\n",path);printf("%s\n",nombre);
 //crear el tamaño de archivo que se indico
 int sizetotal;
 int numerobyt;
@@ -385,7 +485,7 @@ comando[0]='\0';
     printf("Introduzca comando\n");
 
     fgets(temporal, 200, stdin);
-
+getchar();
        while(strstr(temporal,"\\")!=NULL)
     {
 		int largo=strlen(temporal);
