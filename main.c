@@ -228,19 +228,22 @@ fin=ftell(fichero);
         if(temporal.part_primaria[i].part_status==0)
         { nlibres++;
 
+        }else{
+        printf("Xi=%d,Xf=%d\n",temporal.part_primaria[i].part_start ,temporal.part_primaria[i].part_start+temporal.part_primaria[i].part_size);
         }
         }
+        printf("tamaño total=%d",temporal.mbr_tamao);
         if(type=='p'){
 
         if(nlibres==0)
-        printf("No se puede crear particion\n particones primarias=4\n");
+        printf("No se puede crear particion  particones.Primarias=4\n");
         else if(nlibres==1 && temporal.part_ext.part_status==1)
         printf("YA existen 3 primarias y una extendida\n");
         else //buscar posicon
         {
 
 
-            if(nlibres==4 && temporal.part_ext.part_status!=1){
+            if(nlibres==4 && temporal.part_ext.part_status!=1){//no existe ingunga particion
 
 
                 temporal.part_primaria[0].part_status=1;
@@ -252,11 +255,12 @@ fin=ftell(fichero);
                  fseek(fichero,0,SEEK_SET);//actualizo mbr
                  fwrite(&temporal, sizeof(temporal),1,fichero);
 
-                 printf("se creo particion 1 con Exito\n");
+                 printf("se creo particion en posicion 1 con Exito\n");
             }
             else {
-
+                 int encontrado=0;
              //recorrer todo
+             //primero
              if(temporal.part_primaria[0].part_status!=1){//se puede colocar en la primera posicion
              //buscar limite final
                 int posf=0;
@@ -276,7 +280,7 @@ fin=ftell(fichero);
 
              if(temporal.part_ext.part_status==1)
                 if(temporal.part_ext.part_start<posf)
-                posf=temporal.part_ext.part_size-sizeof(int);
+              posf=temporal.part_ext.part_start+temporal.part_ext.part_size+sizeof(int);
 
                 //calcular si el espacio es suficiente
                 if(posi+fin<posf){
@@ -289,17 +293,148 @@ fin=ftell(fichero);
                 temporal.part_primaria[0].part_type=type;
                  fseek(fichero,0,SEEK_SET);//actualizo mbr
                  fwrite(&temporal, sizeof(temporal),1,fichero);
+                printf("se creo particion en posicion 1 con Exito\n");
 
-                 printf("se creo particion 1 con Exito\n");
+                encontrado=1;
+
+                }else
+                encontrado=0;
+
+             }if(temporal.part_primaria[1].part_status!=1 && encontrado==0){//se puede colocar en la primera posicion
+             //buscar limite final
+
+                int posf=0;
+                int posi=temporal.part_primaria[0].part_start+temporal.part_primaria[0].part_size+sizeof(int);
 
 
-                }
+             if(temporal.part_primaria[2].part_status==1)
+             posf=temporal.part_primaria[2].part_start;
+             else if(temporal.part_primaria[3].part_status==1)
+             posf=temporal.part_primaria[3].part_start;
+
+             else
+              {fseek(fichero,0,SEEK_END);
+
+              posf=ftell(fichero);
+              }
+
+             if(temporal.part_ext.part_status==1)
+                if(temporal.part_ext.part_start<posf)
+                posf=temporal.part_ext.part_start+temporal.part_ext.part_size+sizeof(int);
+
+                //calcular si el espacio es suficiente
+                if(posi+fin<posf){
+
+                temporal.part_primaria[1].part_status=1;
+                temporal.part_primaria[1].part_start=posi;
+                temporal.part_primaria[1].part_fit=fit;
+                strcmp(temporal.part_primaria[1].part_name,nombre);
+                temporal.part_primaria[1].part_size=fin;
+                temporal.part_primaria[1].part_type=type;
+
+                 fseek(fichero,0,SEEK_SET);//actualizo mbr
+                 fwrite(&temporal, sizeof(temporal),1,fichero);
+
+                 printf("se creo particion en posicion 2 con Exito\n");
+                encontrado=1;
+
+                }else{
+                encontrado=0;
 
              }
 
 
-            }
 
+            }if(temporal.part_primaria[2].part_status!=1 && encontrado==0){//se puede colocar en la primera posicion
+             //buscar limite final
+
+                int posf=0;
+                int posi=temporal.part_primaria[1].part_start+temporal.part_primaria[1].part_size+sizeof(int);
+
+
+             if(temporal.part_primaria[3].part_status==1)
+             posf=temporal.part_primaria[3].part_start;
+
+
+             else
+              {fseek(fichero,0,SEEK_END);
+
+              posf=ftell(fichero);
+              }
+
+             if(temporal.part_ext.part_status==1)
+                if(temporal.part_ext.part_start<posf)
+                posf=temporal.part_ext.part_start+temporal.part_ext.part_size+sizeof(int);
+
+                //calcular si el espacio es suficiente
+                if(posi+fin<posf){
+
+                temporal.part_primaria[2].part_status=1;
+                temporal.part_primaria[2].part_start=posi;
+                temporal.part_primaria[2].part_fit=fit;
+                strcmp(temporal.part_primaria[1].part_name,nombre);
+                temporal.part_primaria[2].part_size=fin;
+                temporal.part_primaria[2].part_type=type;
+
+                 fseek(fichero,0,SEEK_SET);//actualizo mbr
+                 fwrite(&temporal, sizeof(temporal),1,fichero);
+
+                 printf("se creo particion en posicion 3 con Exito\n");
+                encontrado=1;
+
+                }else{
+                encontrado=0;
+
+             }
+
+
+
+            }
+ ////___ultima posicion______________________________
+        if(temporal.part_primaria[3].part_status!=1 && encontrado==0){//se puede colocar en la primera posicion
+             //buscar limite final
+
+                int posf=0;
+                int posi=temporal.part_primaria[2].part_start+temporal.part_primaria[2].part_size+sizeof(int);
+
+            fseek(fichero,0,SEEK_END);
+
+              posf=ftell(fichero);
+
+
+             if(temporal.part_ext.part_status==1)
+                if(temporal.part_ext.part_start<posf)
+                posf=temporal.part_ext.part_start+temporal.part_ext.part_size+sizeof(int);
+
+                //calcular si el espacio es suficiente
+                if(posi+fin<posf){
+
+                temporal.part_primaria[3].part_status=1;
+                temporal.part_primaria[3].part_start=posi;
+                temporal.part_primaria[3].part_fit=fit;
+                strcmp(temporal.part_primaria[3].part_name,nombre);
+                temporal.part_primaria[3].part_size=fin;
+                temporal.part_primaria[3].part_type=type;
+
+                 fseek(fichero,0,SEEK_SET);//actualizo mbr
+                 fwrite(&temporal, sizeof(temporal),1,fichero);
+
+                 printf("se creo particion en posicion 4 con Exito\n");
+                encontrado=1;
+
+                }else{
+                encontrado=0;
+
+                printf(" La particion primaria no se pudo crear no hay espacio suficiente\n");
+             }
+
+
+
+            }
+        }
+
+
+        }
         }
 
 
@@ -312,7 +447,7 @@ fin=ftell(fichero);
 		}
 
 		}
-}
+
 void comandomkdisk(char comando[300]){
 //identificando valores
 
