@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 //struct para la creacion de muestro bloque
 typedef struct{
 	char part_status;
@@ -27,6 +28,221 @@ typedef struct{
 	TParticion part_primaria[4];//struct con infornacion de particiones primarias
 	TParticionEBR part_ext;//struct con informcion de particion extendida
 	}MBR;
+//para menejar las particiones montadas
+
+char *cabezeras[10]={'\0'};
+
+char tablaparticion[10][10]={'\0'};
+
+
+
+void montar(char comando[300]){
+char *path;
+    char *token;
+    char *nombre;
+//valor por default
+
+path=NULL;
+nombre=NULL;
+token=strtok(comando," \n\\");
+	 token=strtok(NULL, " \n\\");
+	 int bandera=0;//la bandera nos ayuda con el path con comillas
+	 while(token!=NULL){
+
+		 ///**************bandera
+ 	 if(bandera==1){
+	  strcat(path," ");//agrega espacio en blanco al path
+		 if(strstr(token,"\"")==NULL){
+			 bandera=1;//continua concatenando el path
+			 strcat(path,token);
+			 }else{
+
+				 bandera=0;//se encontro cierre de comillas
+				 strncat(path,token,strlen(token)-1);//concatena el ultimo token del path sin comillas
+				 path[strlen(token)]='\0';
+
+				 }}
+				  else if(strstr(token,"-name::")!=NULL){
+			int le=strlen(token);
+			  nombre=(char*) malloc (1000);
+			 int i=7;
+			 int j=0;
+			 for(; i<le;i++){
+				 nombre[j]=token[i];
+				 j++;
+                }
+		 }
+		 ///****************************
+		 else if(strstr(token,"-path::")!=NULL){
+			 int len=strlen(token);
+
+			   path=(char*) malloc (1000);//inicializamor el char para path
+			  if(token[len-1]=='\"')//no es path con comillas
+			 {  bandera=0;
+
+				 int i=8;
+			 int j=0;
+			 for(;i<len-1;i++){
+				 path[j]=token[i];//guarda el valor del path
+				 j++;
+				 }
+				 }
+			 else{//si tiene comillas
+			 bandera=1;//se activa la bandera para concatenar lo siguiente
+			 int i=8;//-path::
+			 int j=0;
+			 for(;i<len;i++){
+				 path[j]=token[i];
+				 j++;
+				 }
+				 path[len]='\0';
+
+
+			 }
+
+
+		 }
+		 else{
+			 printf(" %s error: instruccion no reconocido\n",token);
+			 }
+
+		  token=strtok(NULL, " \n\\");
+
+		}
+		if(path!=NULL && nombre!=NULL){
+		//buscar el path en la lista de cabezeras
+		int j=0;
+		int encontrado=0;
+		while(encontrado!=1){
+
+		if(cabezeras[j]=='\0'){
+
+        cabezeras[j]=path;
+		printf("dv%d %s\n",j+1,cabezeras[j]);
+		encontrado=1;
+
+		}else if(strcmp(cabezeras[j],path)==0){
+
+		encontrado=1;
+		}
+
+        j++;
+		}
+
+
+		}
+
+
+
+}
+void crear_reporte(char comando[300]){
+
+    char *id;
+    char *ruta;
+    char *path;
+    char *token;
+    char *nombre;
+//valor por default
+id=NULL;
+ruta=NULL;
+path=NULL;
+nombre=NULL;
+token=strtok(comando," \n\\");
+	 token=strtok(NULL, " \n\\");
+	 int bandera=0;//la bandera nos ayuda con el path con comillas
+	 while(token!=NULL){
+
+		 ///**************bandera
+ 	 if(bandera==1){
+	  strcat(path," ");//agrega espacio en blanco al path
+		 if(strstr(token,"\"")==NULL){
+			 bandera=1;//continua concatenando el path
+			 strcat(path,token);
+			 }else{
+
+				 bandera=0;//se encontro cierre de comillas
+				 strncat(path,token,strlen(token)-1);//concatena el ultimo token del path sin comillas
+				 }}
+		//************siz
+	else if(strstr(token,"-id")!=NULL){
+
+		 int len=strlen(token);
+		 int i=5;//tamaño del token -size::
+		 char* temp;//captura el valor de size
+		  int j=0;
+		   id=(char*) malloc (6);
+		  for(;i<len;i++)
+		   {id[j]=token[i];
+		   j++;
+		   }id[j]='\0';
+
+            printf("%s\n",id);
+
+
+		 }
+		 ///********************unit
+	else if(strstr(token,"-ruta::")!=NULL){
+			 int len=strlen(token);//tamaño total del token +unit:NUMERO
+			 int i=7;//tamaño del token -size::
+		 char* temp;//captura el valor de size
+		  int j=0;
+		   ruta=(char*) malloc (100);
+		  for(;i<len;i++)
+		   {ruta[j]=token[i];
+		   j++;
+		   }ruta[j]='\0';
+
+		 }
+		 else if(strstr(token,"-name::")!=NULL){
+			int le=strlen(token);
+			  nombre=(char*) malloc (1000);
+			 int i=7;
+			 int j=0;
+			 for(; i<le;i++){
+				 nombre[j]=token[i];
+				 j++;
+                }
+		 }
+		 ///****************************
+		 else if(strstr(token,"-path::")!=NULL){
+			 int len=strlen(token);
+
+			   path=(char*) malloc (1000);//inicializamor el char para path
+			  if(token[len-1]=='\"')//no es path con comillas
+			 {  bandera=0;
+
+				 int i=8;
+			 int j=0;
+			 for(;i<len-1;i++){
+				 path[j]=token[i];//guarda el valor del path
+				 j++;
+				 }
+				 }
+			 else{//si tiene comillas
+			 bandera=1;//se activa la bandera para concatenar lo siguiente
+			 int i=8;//-path::
+			 int j=0;
+			 for(;i<len;i++){
+				 path[j]=token[i];
+				 j++;
+				 }
+
+
+			 }
+
+
+		 }
+		 else{
+			 printf(" %s error: instruccion no reconocido\n",token);
+			 }
+
+		  token=strtok(NULL, " \n\\");
+
+		}
+
+ printf("%s\n",path);printf("%s\n",nombre);
+
+}
 void comandofdisk(char comando[300]){
 char *token;
 	int size;
@@ -232,7 +448,7 @@ fin=ftell(fichero);
         printf("Xi=%d,Xf=%d\n",temporal.part_primaria[i].part_start ,temporal.part_primaria[i].part_start+temporal.part_primaria[i].part_size);
         }
         }
-        printf("tamaño total=%d",temporal.mbr_tamao);
+        printf("tamaño total=%d\n",temporal.mbr_tamao);
         if(type=='p'){
 
         if(nlibres==0)
@@ -620,7 +836,7 @@ comando[0]='\0';
     printf("Introduzca comando\n");
 
     fgets(temporal, 200, stdin);
-getchar();
+//getchar();
        while(strstr(temporal,"\\")!=NULL)
     {
 		int largo=strlen(temporal);
@@ -642,18 +858,29 @@ getchar();
         comandomkdisk(comando);
    }else if(strstr(comando,"fdisk")!=NULL){
         comandofdisk(comando);
+   }else if(strstr(comando,"rep")!=NULL){
+    if(comando[0]=='r'&& comando[1]=='e'&& comando[2]=='p'){
+            crear_reporte(comando);}
+
+   }else if(strstr(comando,"mount")!=NULL){
+     montar(comando);
+
    }
+
 
 }
 
 int main()
 {
-int seguir;
+int seguir=1;
+while(seguir==1){
+
+if(seguir==1){
+     comandos();
+     }
 printf("¿Desea ingresar comandos? 1)si 2)no\n");
 scanf("%d",&seguir);
 getchar();
-if(seguir==1){
-     comandos();
      }
     return 0;
 }
