@@ -29,10 +29,15 @@ typedef struct{
 	TParticionEBR part_ext;//struct con informcion de particion extendida
 	}MBR;
 //para menejar las particiones montadas
+char listaletras[27]={'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s',
+                't','u','v','w','x','y','z'};
+typedef struct{
+char identificador[300];
+char idcaracter[10];
 
-char *cabezeras[10]={'\0'};
-
-char tablaparticion[10][10]={'\0'};
+}celda;
+celda cabezeras[10];
+celda tablaparticion[10][10];
 
 
 
@@ -113,18 +118,48 @@ token=strtok(comando," \n\\");
 		//buscar el path en la lista de cabezeras
 		int j=0;
 		int encontrado=0;
-		while(encontrado!=1){
+		char sdv[7]="sdv";
+		while(encontrado!=1 && j<10){
 
-		if(cabezeras[j]=='\0'){
+		if(cabezeras[j].identificador[0]=='\0'){
 
-        cabezeras[j]=path;
-		printf("dv%d %s\n",j+1,cabezeras[j]);
+        strcpy(cabezeras[j].identificador,path);
+        //sprintf(cabezeras[j].idcaracter,"%d",j+1);
+       sdv[3]=listaletras[j];
+       sdv[4]='\0';
+    strcpy(cabezeras[j].idcaracter,sdv);//se agrego cabezera el path
+	//	printf("%s %s\n",cabezeras[j].idcaracter,cabezeras[j].identificador);
+
+        ///agregar valores a la tabla de control de particiones
+        sdv[3]=listaletras[j];
+        sdv[4]='1';
+        sdv[5]='\0';
+       strcpy(tablaparticion[0][j].identificador,nombre);
+       strcpy(tablaparticion[0][j].idcaracter,sdv);
+    printf("%s %s\n",cabezeras[j].idcaracter,tablaparticion[0][j].idcaracter );
 		encontrado=1;
 
-		}else if(strcmp(cabezeras[j],path)==0){
 
+		}else if(strcmp(cabezeras[j].identificador,path)==0){
+		//solo agregarmos a tabla de particiones
+		int i=0;
+        for(;i<10;i++){
+        if(tablaparticion[i][j].identificador[0]=='\0'){
+            strcpy(tablaparticion[i][j].identificador,nombre);
+             sdv[3]=listaletras[j];
+             char num[5];
+
+            sprintf(num,"%d",i+1);
+            strcat(sdv,num);
+             strcpy(tablaparticion[i][j].idcaracter,sdv);
+             printf("tabla %s\n",tablaparticion[i][j].idcaracter);
+            i=10;
+        }
+
+        }
 		encontrado=1;
 		}
+
 
         j++;
 		}
@@ -872,6 +907,21 @@ comando[0]='\0';
 
 int main()
 {
+int i,j;
+i=j=0;
+for(;i<10;i++){
+for(;j<10;j++){
+
+tablaparticion[i][j].idcaracter[0]='\0';
+tablaparticion[i][j].identificador[0]='\0';
+}
+}
+i=0;
+for(;j<10;j++){
+
+cabezeras[i].idcaracter[0]='\0';
+cabezeras[i].identificador[0]='\0';
+}
 int seguir=1;
 while(seguir==1){
 
