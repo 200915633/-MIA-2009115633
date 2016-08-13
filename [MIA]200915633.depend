@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1471068633 source:/home/emilia/[MIA]200915633/[MIA]200915633/main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+

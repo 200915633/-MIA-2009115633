@@ -39,8 +39,86 @@ char idcaracter[10];
 celda cabezeras[10];
 celda tablaparticion[10][10];
 
+void clasificar(char comando[300]){
+if(comando[0]!='\0'){
+   if(strstr(comando,"mkdisk")!=NULL){
+        comandomkdisk(comando);
+        getchar();
+   }else if(strstr(comando,"fdisk")!=NULL){
+      {  comandofdisk(comando);getchar();}
+   }else if(strstr(comando,"rep")!=NULL){
+    if(comando[0]=='r'&& comando[1]=='e'&& comando[2]=='p'){
+            crear_reporte(comando);
+            getchar();}
+
+   }else if(strstr(comando,"mount")!=NULL){
+     montar(comando);getchar();
+
+   }else if(strstr(comando,"exec")!=NULL){
+        exe(comando);getchar();
+
+   }else if(strstr(comando,"#")!=NULL){
+       //comentario
+
+   }else{printf(" %s comando no definido\n", comando);}
+}
+}
+void exe(char comando[300]){
+char *path;
+    char *token;
+    char temporal[300];
+    char comandof[300];
+    path=NULL;
+    temporal[0]='\0';
+    comandof[0]='\0';
+token=strtok(comando," \n\\");
+	 token=strtok(NULL, " \n\\");
+int bandera=0;//la bandera nos ayuda con el path con comillas
+
+		 path=(char*)malloc(300);
+		 if(token!=NULL)
+		{ strcpy(path,token);
+            FILE *archivo;
+            archivo=fopen(path,"r");
+            if(archivo){
+            while (feof(archivo) == 0)
+            {temporal[0]='\0';
+
+                fgets(temporal, 300, archivo);
+    if(bandera){
+    strcat(comandof,temporal);
+
+    }else
+    strcpy(comandof,temporal);
+    if(strstr(temporal,"\\")!=NULL){
+
+        bandera=1;
+
+    }else bandera=0;
 
 
+   int i=0;
+
+
+   for(;i<strlen(comandof); i++){
+       comandof[i]=tolower(comandof[i]);
+   }
+   if(bandera==0)
+  { printf("%s\n",comandof);
+    clasificar(comandof);
+  }
+
+
+
+
+
+
+   }fclose(archivo);
+            }else printf("no se pudo abrir el archivo\n");
+        }
+        else
+        printf("error en exec\n");
+}
 void montar(char comando[300]){
 char *path;
     char *token;
@@ -69,12 +147,18 @@ token=strtok(comando," \n\\");
 				 }}
 				  else if(strstr(token,"-name::")!=NULL){
 			int le=strlen(token);
-			  nombre=(char*) malloc (1000);
-			 int i=7;
+			  nombre=(char*) malloc (16);
+
+			 int i=8;
 			 int j=0;
-			 for(; i<le;i++){
+			 for(; i<le-1;i++){
+
 				 nombre[j]=token[i];
 				 j++;
+                }
+                for(;j<16;j++){
+
+                nombre[j]='\0';
                 }
 		 }
 		 ///****************************
@@ -116,27 +200,58 @@ token=strtok(comando," \n\\");
 		}
 		if(path!=NULL && nombre!=NULL){
 		//buscar el path en la lista de cabezeras
+		printf("%s ",nombre);
 		int j=0;
 		int encontrado=0;
-		char sdv[7]="sdv";
+		char sdv[5]="vd";
+		int esta=0;
+    FILE *fichero;
+    fichero=fopen(path,"rb");
+    if(!fichero){
+        printf("el disco no existe\n");
+    }else{
+        MBR aux;
+        fseek (fichero, 0, SEEK_SET);
+        fread (&aux, sizeof(aux), 1, fichero);
+        int i=0;
+
+        for(;i<4;i++){
+        if(aux.part_primaria[i].part_status==1){
+            if(strstr(aux.part_primaria[i].part_name,nombre)
+            )
+              {  esta=1;
+                i=4;
+
+            break;
+            }
+
+
+        }
+        }
+        if(esta==0){
+        printf("la particion no existe en el disco\n");
+        }
+    fclose(fichero);
+    }
+    if(esta==1){
 		while(encontrado!=1 && j<10){
 
 		if(cabezeras[j].identificador[0]=='\0'){
 
         strcpy(cabezeras[j].identificador,path);
         //sprintf(cabezeras[j].idcaracter,"%d",j+1);
-       sdv[3]=listaletras[j];
-       sdv[4]='\0';
+       sdv[2]=listaletras[j];
+       sdv[3]='\0';
     strcpy(cabezeras[j].idcaracter,sdv);//se agrego cabezera el path
 	//	printf("%s %s\n",cabezeras[j].idcaracter,cabezeras[j].identificador);
 
         ///agregar valores a la tabla de control de particiones
-        sdv[3]=listaletras[j];
-        sdv[4]='1';
+        sdv[2]=listaletras[j];
+        sdv[3]='1';
         sdv[5]='\0';
        strcpy(tablaparticion[0][j].identificador,nombre);
        strcpy(tablaparticion[0][j].idcaracter,sdv);
-    printf("%s %s\n",cabezeras[j].idcaracter,tablaparticion[0][j].idcaracter );
+    printf("%s %s\n",cabezeras[j].identificador,tablaparticion[0][j].idcaracter );
 		encontrado=1;
 
 
@@ -146,7 +261,7 @@ token=strtok(comando," \n\\");
         for(;i<10;i++){
         if(tablaparticion[i][j].identificador[0]=='\0'){
             strcpy(tablaparticion[i][j].identificador,nombre);
-             sdv[3]=listaletras[j];
+             sdv[2]=listaletras[j];
              char num[5];
 
             sprintf(num,"%d",i+1);
@@ -164,9 +279,24 @@ token=strtok(comando," \n\\");
         j++;
 		}
 
-
+}
 		}
+else{
+int j=0;
+int i=0;
+for(;j<10;j++){
+for(;i<10;i++){
+if(cabezeras[j].identificador[0]!='\0')
+   {
+    if(tablaparticion[i][j].identificador[0]!='\0'){
+    printf("id:: %s path::%s nombre:: %s\n",tablaparticion[i][j].idcaracter,cabezeras[j].identificador,tablaparticion[i][j].identificador);
+    }
+    }
+}
+}
 
+
+}
 
 
 }
@@ -211,7 +341,7 @@ token=strtok(comando," \n\\");
 		   j++;
 		   }id[j]='\0';
 
-            printf("%s\n",id);
+
 
 
 		 }
@@ -230,12 +360,16 @@ token=strtok(comando," \n\\");
 		 }
 		 else if(strstr(token,"-name::")!=NULL){
 			int le=strlen(token);
-			  nombre=(char*) malloc (1000);
+			  nombre=(char*) malloc (16);
 			 int i=7;
 			 int j=0;
 			 for(; i<le;i++){
 				 nombre[j]=token[i];
 				 j++;
+                }
+                for(;j<16;j++){
+
+                nombre[j]='\0';
                 }
 		 }
 		 ///****************************
@@ -275,7 +409,59 @@ token=strtok(comando," \n\\");
 
 		}
 
- printf("%s\n",path);printf("%s\n",nombre);
+ //printf("%s\n",path);printf("%s\n",nombre);
+ if(strcmp(nombre,"mbr")==0){
+
+ //buscar en tabla de mount
+
+ char chardisco=id[2];
+
+ int j=0;
+int columana=-1;
+ for(;j<27;j++){
+ if(listaletras[j]==chardisco)
+    {columana=j;
+        j=27;
+
+ }
+ }
+
+char dire[100];
+dire[0]='\0';
+char idsd[16];
+idsd[0]='\0';
+ if(columana>=0){
+ int i=0;
+ for(;i<10;i++){
+    if(strcmp(tablaparticion[i][columana].idcaracter,id)==0){
+    strcpy(dire,cabezeras[columana].identificador);
+    strcpy(idsd,tablaparticion[i][columana].identificador);
+    }
+
+ }
+
+ }
+ if(dire[0]!='\0' && idsd[0]!='\0'){
+    FILE *fichero;
+    fichero=fopen(dire,"rb");
+    if(fichero){
+    MBR auxiliar;
+     fread (&auxiliar, sizeof(auxiliar), 1, fichero);
+    //printf("%d",auxiliar.mbr_tamao);
+    fclose(fichero);
+    fichero=fopen("/home/emilia/midot.dot","w+");
+    fprintf(fichero, "%s",  "digraph G { node [shape=plaintext] a [label=<<table border=\"0\" cellborder=\"1\" cellspacing=\"0\">");
+    fprintf(fichero,"%s %d %s ", "<tr><td>",auxiliar.mbr_disk_signature,"</td></tr>");
+    fprintf(fichero,"%s %c %s ", "<tr><td>",auxiliar.part_primaria[0].part_type,"</td></tr>");
+    fprintf(fichero,"%s %d %s ", "<tr><td>",auxiliar.mbr_tamao,"</td></tr>");
+    fprintf(fichero,"%s ", " </table>>];}");
+    fclose(fichero);
+    system("dot /home/emilia/midot.dot -o /home/emilia/midot.png -Tpng ");
+    }
+ }else
+    printf("error datos no se encuentran montados\n");
+
+ }
 
 }
 void comandofdisk(char comando[300]){
@@ -359,14 +545,17 @@ char *token;
 		 }
 		 else if(strstr(token,"-name::")!=NULL){
 			 int le=strlen(token);
-			  nombre=(char*) malloc (1000);
+			  nombre=(char*) malloc (16);
 			 int i=8;
 			 int j=0;
 			 for(; i<le-1;i++){
 				 nombre[j]=token[i];
 				 j++;
 				 }
+for(;j<16;j++){
 
+                nombre[j]='\0';
+                }
 
 		 }
 		 else if(strstr(token,"+add::")!=NULL){
@@ -500,7 +689,7 @@ fin=ftell(fichero);
                 temporal.part_primaria[0].part_status=1;
                 temporal.part_primaria[0].part_start=posmbrf;
                 temporal.part_primaria[0].part_fit=fit;
-                strcmp(temporal.part_primaria[0].part_name,nombre);
+                strcpy( temporal.part_primaria[0].part_name,nombre);
                 temporal.part_primaria[0].part_size=fin;
                 temporal.part_primaria[0].part_type=type;
                  fseek(fichero,0,SEEK_SET);//actualizo mbr
@@ -579,7 +768,7 @@ fin=ftell(fichero);
                 temporal.part_primaria[1].part_status=1;
                 temporal.part_primaria[1].part_start=posi;
                 temporal.part_primaria[1].part_fit=fit;
-                strcmp(temporal.part_primaria[1].part_name,nombre);
+                strcpy(temporal.part_primaria[1].part_name,nombre);
                 temporal.part_primaria[1].part_size=fin;
                 temporal.part_primaria[1].part_type=type;
 
@@ -623,7 +812,7 @@ fin=ftell(fichero);
                 temporal.part_primaria[2].part_status=1;
                 temporal.part_primaria[2].part_start=posi;
                 temporal.part_primaria[2].part_fit=fit;
-                strcmp(temporal.part_primaria[1].part_name,nombre);
+                strcpy(temporal.part_primaria[1].part_name,nombre);
                 temporal.part_primaria[2].part_size=fin;
                 temporal.part_primaria[2].part_type=type;
 
@@ -663,7 +852,7 @@ fin=ftell(fichero);
                 temporal.part_primaria[3].part_status=1;
                 temporal.part_primaria[3].part_start=posi;
                 temporal.part_primaria[3].part_fit=fit;
-                strcmp(temporal.part_primaria[3].part_name,nombre);
+                strcpy(temporal.part_primaria[3].part_name,nombre);
                 temporal.part_primaria[3].part_size=fin;
                 temporal.part_primaria[3].part_type=type;
 
@@ -753,12 +942,16 @@ token=strtok(comando," \n\\");
 		 }
 		 else if(strstr(token,"-name::")!=NULL){
 			int le=strlen(token);
-			  nombre=(char*) malloc (1000);
+			  nombre=(char*) malloc (16);
 			 int i=7;
 			 int j=0;
 			 for(; i<le;i++){
 				 nombre[j]=token[i];
 				 j++;
+                }
+                for(;j<16;j++){
+
+                nombre[j]='\0';
                 }
 		 }
 		 ///****************************
@@ -846,7 +1039,8 @@ tt=time(NULL);
 
 			  MBR master;
 			  master.mbr_tamao=sizetotal;
-			  master.mbr_fecha_creacion=asctime(localtime(&tt));
+			 // master.mbr_fecha_creacion=asctime(localtime(&tt));
+			  strcpy(master.mbr_fecha_creacion,asctime(localtime(&tt)));
 			  master.mbr_disk_signature=rand();
               master.part_primaria[0].part_status=0;
               master.part_primaria[1].part_status=0;
@@ -863,6 +1057,8 @@ tt=time(NULL);
 printf("VALORES SIN DEFINIR\n");
 }
 }
+
+
 void comandos(){
    char comando[300];
     char temporal[200];
@@ -900,7 +1096,13 @@ comando[0]='\0';
    }else if(strstr(comando,"mount")!=NULL){
      montar(comando);
 
-   }
+   }else if(strstr(comando,"exec")!=NULL){
+        exe(comando);
+
+   }else if(strstr(comando,"#")!=NULL){
+       //comentario
+
+   }else{printf("comando no definido\n");}
 
 
 }
